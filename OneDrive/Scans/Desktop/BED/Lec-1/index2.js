@@ -9,8 +9,9 @@ setImmediate(()=>{
     console.log("set immediate");
 })
 
-fs.readFile("demo.txt",(data)=>{
+fs.readFile("demo.txt",(err,data)=>{
     console.log("file read");
+    console.log(data);
     setTimeout(()=>{
         console.log("timer2");
     },0)
@@ -18,4 +19,22 @@ fs.readFile("demo.txt",(data)=>{
         console.log("immediate 2");
     })
 })
+
+function someTask(){
+    return new Promise((resolve,reject)=>{
+        resolve("promise")
+    })
+}
+someTask().then((data)=>{
+    console.log(data);
+})
+
+.catch((err)=>{
+    console.log(err);
+})
+
+process.nextTick(()=>{
+    console.log("next tick");
+})
+
 console.log("end");
