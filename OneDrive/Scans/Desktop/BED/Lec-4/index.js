@@ -50,5 +50,4 @@ function deductAmount(amount, cb){
 
 //problems in callback
 // 1. callback hell
-// 2. no control over code
-
+// 2. no control over codes
