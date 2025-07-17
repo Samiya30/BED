@@ -29,3 +29,10 @@ async function task(file1,file2,file3){
     console.log(mes)
 }
 task("../users.txt","../users2.txt","./allusers2.txt")
+
+
+//assignment
+// product data and user data
+// username
+// product name
+// order history
