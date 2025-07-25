@@ -46,9 +46,7 @@ app.post("/adduser", (req, res) => {
                 users = [];
             }
         }
-
         users.push(newUser);
-
         fs.writeFile("data.json", JSON.stringify(users, null, 2), (err) => {
             if (err) {
                 return res.send("Failed to store data in file.");
