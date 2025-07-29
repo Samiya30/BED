@@ -56,4 +56,3 @@ let form=document.querySelector(".signup")
 btn.addEventListener("click",()=>{
    form.classList.toggle("hide");
 })
-
