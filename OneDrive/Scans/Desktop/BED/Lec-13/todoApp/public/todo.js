@@ -49,3 +49,5 @@ function showalltodo(todoArray){
         addTodo(todo);
     });
 }
+
+//add data in the file also 
