@@ -46,7 +46,6 @@ function isLogin(req, res, next) {
 
 
 
-
 // create
 app.post("/blogs", isLogin,async(req,res)=>{
     let title = req.body.title;
@@ -85,7 +84,7 @@ app.delete("/blogs/:blogId",isLogin,async(req,res)=>{
     return res.json({ success: false, message: "Blog does not exist" });
   }
 
-  if (blogExist.userId.toString() !== req.userId) {
+  if (blogExist.userId !== req.userId) {
     return res.json({ success: false, message: "Permission denied" });
   }
 
