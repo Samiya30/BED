@@ -62,3 +62,5 @@ loginForm.addEventListener("submit",async function(e){
         alert("something went wrong")
     }
 })
+
+//addblog
