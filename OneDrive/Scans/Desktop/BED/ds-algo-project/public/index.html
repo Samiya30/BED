@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Algorithm Visualizer — Circular Nodes</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --accent: #007bff;
+      --muted: #666;
+    }
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      margin: 16px;
+      color: #222;
+    }
+    h1 { margin: 0 0 12px 0; }
+
+    .controls {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:12px;
+    }
+    input[type="text"], select {
+      padding:8px 10px;
+      font-size:14px;
+      border-radius:6px;
+      border:1px solid #ddd;
+      min-width:220px;
+    }
+    button {
+      padding:8px 12px;
+      background:var(--accent);
+      color:white;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.ghost { background:transparent; color:var(--accent); border:1px solid var(--accent);}
+    button.small { padding:6px 8px; font-size:13px; }
+
+    .layout {
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width:900px) { .layout { grid-template-columns: 1fr; } }
+
+    .card {
+      background:var(--card);
+      border-radius:10px;
+      box-shadow:0 6px 18px rgba(15,23,42,0.06);
+      padding:14px;
+    }
+
+    .main-visual {
+      height: 100px;
+      display:flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      background:linear-gradient(180deg, #fff, #fbfbff);
+      margin-bottom:12px;
+      overflow-x: auto;
+    }
+
+    .node {
+      width: 50px;
+      height: 50px;
+      background: var(--accent);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: 600;
+      transition: all 240ms ease;
+      flex-shrink: 0;
+    }
+    .node.highlight { 
+      background: #ff8a00; 
+      transform: scale(1.1);
+      box-shadow:0 6px 18px rgba(255,138,0,0.15);
+    }
+
+    .info { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; }
+    .info .desc { color:var(--muted); font-size:14px; }
+
+    .thumbs-wrap { max-height:520px; overflow:auto; padding-top:6px; }
+    .thumb-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap:10px;
+    }
+    .thumb {
+      background:#f8fbff;
+      border-radius:8px;
+      padding:8px;
+      border:1px solid #e9f0ff;
+      cursor:pointer;
+    }
+    .mini {
+      display:flex;
+      gap:3px;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:6px;
+    }
+
+    .thumb .meta { font-size:12px; color:var(--muted); text-align:center; }
+    .controls-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; }
+    .speed { display:flex; gap:6px; align-items:center; color:var(--muted); font-size:13px; }
+    .status { font-weight:600; color:#333; margin-left:8px; }
+  </style>
+</head>
+<body>
+  <h1>Algorithm Visualizer — Circular Nodes</h1>
+
+  <div class="controls card">
+    <div class="controls-row">
+      <input id="arrayInput" type="text" placeholder="Enter numbers e.g. 5,3,8,2,1" />
+      <select id="algoSelect">
+        <option value="bubble">Bubble Sort</option>
+        <option value="selection">Selection Sort</option>
+        <option value="insertion">Insertion Sort</option>
+      </select>
+      <button id="genBtn">Generate Steps</button>
+      <button id="playBtn">Play</button>
+      <button id="prevBtn" class="small">◀ Prev</button>
+      <button id="nextBtn" class="small">Next ▶</button>
+      <button id="showAllBtn" class="ghost small">Show All Steps</button>
+      <button id="clearBtn" class="ghost small">Clear</button>
+    </div>
+
+    <div class="controls-row">
+      <div class="speed">
+        Speed:
+        <input id="speedRange" type="range" min="100" max="1500" step="50" value="600" />
+        <span id="speedVal">600ms</span>
+      </div>
+      <div class="status" id="status">No steps</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="main-visual" id="mainVisual" aria-hidden="true"></div>
+        <div class="info">
+          <div class="desc" id="stepDesc">—</div>
+          <div class="desc" id="stepCounter">0 / 0</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3 style="margin-top:0">All Steps (click a step to jump)</h3>
+        <div class="thumbs-wrap">
+          <div id="thumbs" class="thumb-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 style="margin-top:0">Step detail</h3>
+        <div id="stepDetail" style="min-height:120px; color:var(--muted)"></div>
+      </div>
+
+      <div class="card" style="margin-top:12px;">
+        <h3 style="margin-top:0">Legend</h3>
+        <p style="margin:6px 0; color:var(--muted)">Orange = highlighted indices (comparison / swap). Use Play to auto-step or click thumbnails to jump.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let steps = [];
+    let currentIndex = 0;
+    let playing = false;
+    let timer = null;
+    const mainVisual = document.getElementById('mainVisual');
+    const thumbs = document.getElementById('thumbs');
+    const stepDesc = document.getElementById('stepDesc');
+    const stepCounter = document.getElementById('stepCounter');
+    const stepDetail = document.getElementById('stepDetail');
+    const status = document.getElementById('status');
+    const speedRange = document.getElementById('speedRange');
+    const speedVal = document.getElementById('speedVal');
+
+    speedRange.addEventListener('input', () => {
+      speedVal.textContent = speedRange.value + 'ms';
+      if (playing) {
+        clearInterval(timer);
+        timer = setInterval(nextStep, Number(speedRange.value));
+      }
+    });
+
+    function cloneArr(a){ return a.slice(); }
+
+    function generateBubbleSteps(arr) {
+      const s = [];
+      let a = cloneArr(arr);
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Initial' });
+      const n = a.length;
+      for (let i=0;i<n;i++){
+        for (let j=0;j<n-i-1;j++){
+          s.push({ array: cloneArr(a), highlight: [j,j+1], desc: `Compare index ${j} & ${j+1}` });
+          if (a[j] > a[j+1]) {
+            [a[j], a[j+1]] = [a[j+1], a[j]];
+            s.push({ array: cloneArr(a), highlight: [j,j+1], desc: `Swap ${a[j+1]} and ${a[j]}` });
+          }
+        }
+      }
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Completed' });
+      return s;
+    }
+
+    function generateSelectionSteps(arr){
+      const s=[];
+      let a=cloneArr(arr);
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Initial' });
+      const n=a.length;
+      for(let i=0;i<n-1;i++){
+        let minIdx=i;
+        for(let j=i+1;j<n;j++){
+          s.push({ array: cloneArr(a), highlight:[minIdx,j], desc: `Compare index ${minIdx} & ${j}` });
+          if (a[j] < a[minIdx]) {
+            minIdx = j;
+            s.push({ array: cloneArr(a), highlight:[minIdx,j], desc: `New min found at ${minIdx}` });
+          }
+        }
+        if (minIdx !== i){
+          [a[i], a[minIdx]] = [a[minIdx], a[i]];
+          s.push({ array: cloneArr(a), highlight:[i,minIdx], desc: `Swap index ${i} & ${minIdx} `});
+        } else {
+          s.push({ array: cloneArr(a), highlight:[], desc: `No swap needed for index ${i}` });
+        }
+      }
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Completed' });
+      return s;
+    }
+
+    function generateInsertionSteps(arr){
+      const s=[]; let a = cloneArr(arr);
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Initial' });
+      const n=a.length;
+      for(let i=1;i<n;i++){
+        let key = a[i]; let j=i-1;
+        s.push({ array: cloneArr(a), highlight:[j+1], desc: `Take key ${key} at index ${i}` });
+        while(j >= 0 && a[j] > key){
+          s.push({ array: cloneArr(a), highlight:[j,j+1], desc: `Compare index ${j} & ${j+1}` });
+          a[j+1] = a[j];
+          s.push({ array: cloneArr(a), highlight:[j,j+1], desc: `Shift ${a[j]} to index ${j+1}` });
+          j--;
+        }
+        a[j+1] = key;
+        s.push({ array: cloneArr(a), highlight:[j+1], desc: `Insert key ${key} at index ${j+1}` });
+      }
+      s.push({ array: cloneArr(a), highlight: [], desc: 'Completed' });
+      return s;
+    }
+
+    function renderMain(stepObj){
+      mainVisual.innerHTML = '';
+      if (!stepObj) return;
+      const a = stepObj.array;
+      const highlight = stepObj.highlight || [];
+      a.forEach((v, i) => {
+        const node = document.createElement('div');
+        node.className = 'node' + (highlight.includes(i) ? ' highlight' : '');
+        node.textContent = v;
+        mainVisual.appendChild(node);
+      });
+    }
+
+    function renderThumbnails(allSteps){
+      thumbs.innerHTML = '';
+      if (!allSteps || allSteps.length===0) return;
+      allSteps.forEach((st, idx) => {
+        const t = document.createElement('div');
+        t.className = 'thumb';
+        t.title = `Step ${idx}: ${st.desc}`;
+        t.addEventListener('click', () => { jumpTo(idx); });
+
+        const mini = document.createElement('div');
+        mini.className = 'mini';
+        st.array.forEach((val,i)=>{
+          const mb = document.createElement('div');
+          mb.className = 'node' + (st.highlight && st.highlight.includes(i) ? ' highlight' : '');
+          mb.style.width='20px'; mb.style.height='20px'; mb.style.fontSize='10px';
+          mb.textContent = val;
+          mini.appendChild(mb);
+        });
+        t.appendChild(mini);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML =` <div style="font-weight:600">Step ${idx}</div><div style="font-size:11px;color:#667">${st.desc}</div>`;
+        t.appendChild(meta);
+
+        thumbs.appendChild(t);
+      });
+    }
+
+    function updateUI(){
+      if (!steps || steps.length===0) {
+        renderMain(null);
+        stepDesc.textContent = 'No steps generated';
+        stepCounter.textContent = '0 / 0';
+        stepDetail.textContent = '';
+        status.textContent = 'No steps';
+        return;
+      }
+      const st = steps[currentIndex];
+      renderMain(st);
+      stepDesc.textContent = st.desc || '';
+      stepCounter.textContent =` ${currentIndex} / ${steps.length - 1}`;
+      stepDetail.textContent = `Array: [${st.array.join(', ')}] — highlight: [${(st.highlight||[]).join(', ')}]`;
+      status.textContent =` Showing step ${currentIndex} of ${steps.length - 1}`;
+      const children = thumbs.children;
+      if (children && children[currentIndex]) {
+        children[currentIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        Array.from(children).forEach((c, i) => c.style.outline = i===currentIndex ? '2px solid rgba(0,123,255,0.15)' : 'none');
+      }
+    }
+
+    function nextStep(){ if (currentIndex<steps.length-1){ currentIndex++; updateUI(); } else stopPlaying(); }
+    function prevStep(){ if (currentIndex>0){ currentIndex--; updateUI(); } }
+    function jumpTo(idx){ currentIndex=Math.max(0, Math.min(idx, steps.length-1)); updateUI(); }
+    function startPlaying(){ if(!steps||steps.length===0)return; playing=true; document.getElementById('playBtn').textContent='Pause'; timer=setInterval(nextStep, Number(speedRange.value)); }
+    function stopPlaying(){ playing=false; document.getElementById('playBtn').textContent='Play'; if(timer){clearInterval(timer); timer=null;} }
+    function togglePlay(){ if(!steps||steps.length===0)return; playing?stopPlaying():startPlaying(); }
+
+    document.getElementById('genBtn').addEventListener('click', ()=> {
+      const raw = document.getElementById('arrayInput').value.trim();
+      if (!raw) { alert('Enter numbers first'); return; }
+      const arr = raw.split(',').map(x => parseFloat(x.trim())).filter(x => !Number.isNaN(x));
+      if (arr.length===0) { alert('Enter valid numbers like 5,3,8,2'); return; }
+      const algo = document.getElementById('algoSelect').value;
+      if (algo === 'bubble') steps = generateBubbleSteps(arr);
+      else if (algo === 'selection') steps = generateSelectionSteps(arr);
+      else if (algo === 'insertion') steps = generateInsertionSteps(arr);
+      currentIndex = 0;
+      renderThumbnails(steps);
+      updateUI();
+    });
+
+    document.getElementById('playBtn').addEventListener('click', togglePlay);
+    document.getElementById('nextBtn').addEventListener('click', ()=>{ stopPlaying(); nextStep(); });
+    document.getElementById('prevBtn').addEventListener('click', ()=>{ stopPlaying(); prevStep(); });
+    document.getElementById('showAllBtn').addEventListener('click', ()=> { if (!steps || steps.length===0) { alert('Generate steps first'); return; } thumbs.scrollIntoView({behavior:'smooth', block:'start'}); });
+    document.getElementById('clearBtn').addEventListener('click', ()=> { stopPlaying(); steps=[]; currentIndex=0; thumbs.innerHTML=''; updateUI(); });
+
+    updateUI();
+  </script>
+</body>
+</html>
