@@ -1,5 +1,14 @@
-const {PrismaClient} =require("./generated/prisma");
-let prisma=new PrismaClient();
+const express=require("express")
+const app=express();
+app.use(express.json());
+app.use(express.urlencoded({extended:true}))
+const userRoutes=require("./routes/userRoutes")
+
+app.use("/api/users",userRoutes)
+
+app.listen(5555,()=>{
+    console.log("server started")
+})
 
 // async function addUser(email,name){
 //     //User user=new User("","");
@@ -14,9 +23,9 @@ let prisma=new PrismaClient();
 //     return "user added"
 // }
 
-// // addUser("samiya@gmail","samiya")
-// // .then((data)=>{console.log(data)})
-// // .catch((e)=>console.log(e))
+// addUser("samiya@gmail","samiya")
+// .then((data)=>{console.log(data)})
+// .catch((e)=>console.log(e))
 
 // //clients-respective classes of class(methods)
 
@@ -110,3 +119,33 @@ async function deleteTweet(id) {
 // deleteUser("2")
 // .then((data)=>console.log(data))
 
+
+async function readTweets(){
+    //select , includes
+    //read all tweets
+    // let allTweets=await prisma.tweet.findMany({
+    //     select:{
+    //         user:{
+    //             select:{
+    //                 name:true
+    //             }
+    //         },
+    //         body:true,
+    //         date:true
+    //     }
+    // })
+
+    let allTweets=await prisma.tweet.findMany({
+        include:{
+            user:{
+                select:{
+                    name:true
+                }
+            }
+        }
+    })
+    return allTweets;
+}
+readTweets()
+.then((data)=>console.log(data))
+.catch((e)=>console.log(e))
