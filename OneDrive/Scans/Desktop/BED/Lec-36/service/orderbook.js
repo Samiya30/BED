@@ -14,7 +14,7 @@ class OrderBook {
     // }
 
 
-    // if a function is prefixed with _ , it means its a private function (it doesnot make it private, there is no such thing it is just a convention)
+    // if a function is prefixed with _ , it means its a private function (it does not make it private, there is no such thing it is just a convention)
     _sort(side) {
         if (side == "BUY") {
             // this.bids.sort();   // lexicographical order by default
