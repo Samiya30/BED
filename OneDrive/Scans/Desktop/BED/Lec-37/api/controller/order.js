@@ -5,7 +5,7 @@ let {publisher}=require("../../shared/index")
 module.exports.postPlaceOrder=async (req,res)=>{
     //user,quantity,type,price,side
     let {type,side,price,quantity,username}=req.body;
-
+    
     //basic validation
     if (!type || !side || !price || !quantity || !username) {
     return res.json({ error: "Missing required fields" });
