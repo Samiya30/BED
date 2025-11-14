@@ -22,3 +22,5 @@ function broadcast(data) {
         s.send(data);
     })
 }
+
+//make it for different markets 

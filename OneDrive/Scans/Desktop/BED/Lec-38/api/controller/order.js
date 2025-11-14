@@ -1,18 +1,18 @@
 const OrderBook = require("../service/orderbook");
-let {publisher} = require("../../shared/index.js");
+let { publisher } = require("../../shared/index.js");
 
 module.exports.postPlaceOrder = async (req, res) => {
-    // price, quantity, type, side, userName, symbol(comes from orderbook instance)
-    let { price, quantity, type, side, username } = req.body;
+    let { price, quantity, type, side } = req.body;
+    let username = req.user.username;  // get from decoded token
 
     // basic validation
-    if (!quantity || !type || !side || !username) {
+    if (!quantity || !type || !side) {
         return res.json({ message: "Missing required fields" });
     }
 
-    let ob=OrderBook.getOrderBook(symbol)
-    let response = ob.placeOrder(price, quantity, type, side, username);
-    
-    await publisher.PUBLISH("book : update" , JSON.stringify(response.book));
+    let response = OrderBook.placeOrder(price, quantity, type, side, username);
+
+    await publisher.PUBLISH("book:update", JSON.stringify(response.book));
+
     res.json(response);
-}
+};
